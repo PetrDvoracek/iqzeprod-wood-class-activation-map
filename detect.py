@@ -3,12 +3,11 @@ from time import time
 import click
 
 import tensorflow as tf
-from tensorflow.python.compiler.tensorrt import trt_convert as trt
-from tensorflow.python.saved_model import tag_constants
-
 import numpy as np
 
 
+from tensorflow.experimental.tensorrt import Converter, ConversionParams
+from tensorflow.python.saved_model import tag_constants
 
 
 @click.command('benchmark')
@@ -44,25 +43,23 @@ def benchmark_trt(model_path, batch_size, times):
         infer(images)
         print(f'inference time: {time() - before}')
 
+
+
 @click.command('convert')
 @click.argument('model-path', type=click.Path(exists=True))
 @click.argument('output-path')
 @click.option('--precision', default='fp32', type=click.Choice(['fp32', 'fp16', 'int8']))
 @click.option('--engine', default=False, is_flag=True)
 def convert(model_path, output_path, precision, engine):
-    if precision == 'fp16':
-        precision_mode = trt.TrtPrecisionMode.FP16
-    elif precision == 'int8':
-        precision_mode = trt.TrtPrecisionMode.int8
-    else: 
-        precision_mode = trt.TrtPrecisionMode.FP32
-    
     if engine:
-    conversion_params = trt.DEFAULT_TRT_CONVERSION_PARAMS._replace(precision_mode=trt.TrtPrecisionMode.FP32,
-                                                               max_workspace_size_bytes=8000000000)
-    converter = trt.TrtGraphConverterV2(input_saved_model_dir=model_path,
-                                        conversion_params=conversion_params)
+        params = ConversionParams(precision_mode=precision.upper(),maximum_cached_engines=16) #large enought?
+    else:
+        params = ConversionParams(precision_mode=precision.upper())
 
+    converter = Converter(
+        input_saved_model_dir=model_path, 
+        conversion_params=params
+        )
     converter.convert()
     converter.save(output_saved_model_dir=output_path)
 
