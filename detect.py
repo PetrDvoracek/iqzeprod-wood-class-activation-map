@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import cv2
 
-# import matplotlib.pyplot as plt
 from scipy import ndimage
 from tensorflow.experimental.tensorrt import Converter, ConversionParams
 from tensorflow.python.saved_model import tag_constants
@@ -144,14 +143,18 @@ def pylon(model_path, trt):
                 pred = np.argmax(pred_class)
                 cam = pred_cam[:,:,:,pred]
 
+                duration = time() - before
+                print(f"{duration * 1000:.2f} ms, {1 / duration:.0f} FPS  ", end="\r")
+                durations.append(duration)
+
                 cam = np.expand_dims(cam, axis=3)
                 cam = cam[0]
                 cam = cv2.merge([cam, cam, cam])
-                cam = ndimage.zoom(cam, (224 / cam.shape[1], 224 / cam.shape[0], 1), order=2)
+                cam = ndimage.zoom(cam, (224 / cam.shape[1], 224 / cam.shape[0], 1), order=0)
                 #cam = cv2.resize(cam, (224, 224), interpolation=cv2.INTER_NEAREST)
                 cam_normal = np.ndarray(cam.shape)
                 cam = cv2.normalize(cam,  cam_normal, 0, 255, cv2.NORM_MINMAX)
-                cam[cam < 150] = 0
+                cam[cam < 100] = 0
                 print(cam.min(), cam.max())
                 # cam = cv2.applyColorMap(cam, cv2.COLORMAP_JET)
                 img_w_cam = image
@@ -160,15 +163,11 @@ def pylon(model_path, trt):
                 img_w_cam[img_w_cam < 0] = 0
                 show_img = cv2.cvtColor(img_w_cam, cv2.COLOR_RGB2BGR)
                 show_img = cv2.resize(show_img, (1024, 544))
-                cv2.putText(show_img, errorOrOk(pred), (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (125,255,0), 1)
+                cv2.putText(show_img, errorOrOk(pred), (512, 272), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 1)
+                cv2.putText(show_img, f'{1 / duration:.0f} FPS', (80, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 1)
                 cv2.imshow('Inference', show_img)
-                # plt.imshow(img_w_cam, cmap='seismic')
 
 
-                duration = time() - before
-                print(f"{duration * 1000:.2f} ms, {1 / duration:.0f} FPS  ", end="\r")
-                durations.append(duration)
-                
                 if cv2.waitKey(1) == 27:
                     break
 
