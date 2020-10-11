@@ -81,13 +81,13 @@ def convert(model_path, output_path, precision, engine):
         conversion_params=params
         )
     converter.convert()
-    if engine:
-        def engine_inputter():
-            for _ in range(1):
-                inp1 = np.random.normal(size=(1, 224, 224, 3)).astype(np.float32)
-                inp2 = np.random.normal(size=(1, 224, 224, 3)).astype(np.float32)
-                yield inp1, inp2
-        converter.build(input_fn=engine_inputter)
+    # if engine:
+    #     def engine_inputter():
+    #         for _ in range(1):
+    #             inp1 = np.random.normal(size=(1, 224, 224, 3)).astype(np.float32)
+    #             inp2 = np.random.normal(size=(1, 224, 224, 3)).astype(np.float32)
+    #             yield inp1, inp2
+    #     converter.build(input_fn=engine_inputter)
     converter.save(output_saved_model_dir=output_path)
 
 def create_pypylon_convertor(pylon):
