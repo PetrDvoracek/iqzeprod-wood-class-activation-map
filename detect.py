@@ -72,7 +72,7 @@ def benchmark(model_path, batch_size, times, csv,heat_up, trt):
 @click.option('--engine', default=False, is_flag=True)
 def convert(model_path, output_path, precision, engine):
     if engine:
-        params = ConversionParams(precision_mode=precision.upper(),maximum_cached_engines=16) #large enought?
+        params = ConversionParams(precision_mode=precision.upper(),maximum_cached_engines=16) #large enough?
     else:
         params = ConversionParams(precision_mode=precision.upper())
 
